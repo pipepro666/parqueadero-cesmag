@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Parqueadero | U. CESMAG</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <style>
+    :root { --cesmag-blue: #0b3c5d; --cesmag-red: #c0392b; --cesmag-gold: #f39c12; }
+    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    
+    /* Login Screen */
+    #loginScreen { height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #072a42 0%, #0b3c5d 100%); }
+    .login-box { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; max-width: 400px; width: 100%; }
+    .login-logo { height: 100px; margin-bottom: 1rem; }
+    
+    /* Navbar y Layout Principal */
+    .navbar-cesmag { background: var(--cesmag-blue); border-bottom: 4px solid var(--cesmag-red); }
+    .navbar-brand img { height: 40px; border-radius: 50%; margin-right: 10px; }
+    .card-custom { border: none; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .card-header-cesmag { background-color: var(--cesmag-blue); color: white; font-weight: 600; border-radius: 12px 12px 0 0; }
+    .stat-card { border-radius: 12px; padding: 1rem; color: white; text-align: center; }
+    
+    /* Panel scroll 160 espacios */
+    .panel-espacios { max-height: 500px; overflow-y: auto; overflow-x: hidden; }
+    .espacio-box { border-radius: 8px; padding: 0.5rem; text-align: center; color: white; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .espacio-libre { background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); }
+    .espacio-ocupado { background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%); }
+  </style>
+</head>
+<body>
+
+  <!-- PANTALLA DE LOGIN -->
+  <div id="loginScreen">
+    <div class="login-box">
+      <img src="logo.jpg" alt="Logo CESMAG" class="login-logo rounded-circle border border-warning border-3">
+      <h4 class="fw-bold mb-1">UNIVERSIDAD CESMAG</h4>
+      <p class="text-muted small mb-4">Acceso Sistema de Parqueadero</p>
+      <form id="formLogin">
+        <div class="input-group mb-3">
+          <span class="input-group-text"><i class="bi bi-person"></i></span>
+          <input type="text" id="loginUser" class="form-control" placeholder="Usuario (admin)" required>
+        </div>
+        <div class="input-group mb-4">
+          <span class="input-group-text"><i class="bi bi-lock"></i></span>
+          <input type="password" id="loginPass" class="form-control" placeholder="Contraseña (admin123)" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 fw-bold" style="background: var(--cesmag-blue);">Iniciar Sesión</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- APLICACIÓN PRINCIPAL (Oculta al inicio) -->
+  <div id="mainApp" class="d-none">
+    
+    <!-- Barra Superior -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-cesmag mb-4">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="#">
+          <img src="logo.jpg" alt="Logo">
+          <strong>Parqueadero CESMAG</strong>
+        </a>
+        <div class="d-flex gap-2">
+          <button class="btn btn-light btn-sm fw-bold" onclick="mostrarPestana('dashboard')"><i class="bi bi-grid me-1"></i> Operación</button>
+          <button class="btn btn-warning btn-sm fw-bold" onclick="mostrarPestana('reportes'); cargarReportes('activos')"><i class="bi bi-file-earmark-text me-1"></i> Reportes</button>
+          <button class="btn btn-danger btn-sm" onclick="cerrarSesion()"><i class="bi bi-box-arrow-right"></i> Salir</button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mb-5">
+      
+      <!-- PESTAÑA 1: OPERACIÓN / DASHBOARD -->
+      <div id="tabDashboard">
+        <!-- Estadísticas -->
+        <div class="card card-custom p-3 mb-4 bg-white">
+          <div class="row text-center align-items-center">
+            <div class="col-md-2 d-none d-md-block border-end"><img src="mascota.jpg" alt="Mascota" class="img-fluid rounded" style="max-height: 90px;"></div>
+            <div class="col-6 col-md-2"><div class="stat-card bg-primary"><small class="fw-bold">TOTAL</small><h3 id="statTotal" class="mb-0">-</h3></div></div>
+            <div class="col-6 col-md-3"><div class="stat-card bg-success"><small class="fw-bold">MOTOS LIBRES</small><h3 id="statMotos" class="mb-0">-</h3></div></div>
+            <div class="col-6 col-md-3"><div class="stat-card bg-info text-white"><small class="fw-bold">BICIS LIBRES</small><h3 id="statBicis" class="mb-0">-</h3></div></div>
+            <div class="col-6 col-md-2"><div class="stat-card bg-danger"><small class="fw-bold">OCUPADOS</small><h3 id="statOcupados" class="mb-0">-</h3></div></div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <!-- Formulario Ingreso -->
+            <div class="card card-custom mb-3">
+              <div class="card-header card-header-cesmag py-2"><i class="bi bi-box-arrow-in-right me-2"></i>Ingreso de Vehículo</div>
+              <div class="card-body p-3">
+                <form id="formIngreso">
+                  <input type="text" id="identificacion" class="form-control form-control-sm mb-2" placeholder="Identificación" required>
+                  <input type="text" id="nombre" class="form-control form-control-sm mb-2" placeholder="Nombre Completo" required>
+                  <select id="tipo_vehiculo" class="form-select form-select-sm mb-2" required>
+                    <option value="MOTO">Motocicleta</option>
+                    <option value="BICICLETA">Bicicleta</option>
+                  </select>
+                  <input type="text" id="placa" class="form-control form-control-sm mb-2 text-uppercase" placeholder="Placa / Código" required>
+                  <div class="row g-2 mb-2">
+                    <div class="col-6"><input type="text" id="marca" class="form-control form-control-sm" placeholder="Marca"></div>
+                    <div class="col-6"><input type="text" id="color" class="form-control form-control-sm" placeholder="Color"></div>
+                  </div>
+                  <button type="submit" class="btn btn-success btn-sm w-100 fw-bold">Registrar Ingreso</button>
+                </form>
+              </div>
+            </div>
+            
+            <!-- Formulario Salida -->
+            <div class="card card-custom">
+              <div class="card-header bg-danger text-white py-2 fw-bold"><i class="bi bi-box-arrow-right me-2"></i>Salida de Vehículo</div>
+              <div class="card-body p-3">
+                <form id="formSalida">
+                  <input type="text" id="placaSalida" class="form-control form-control-sm mb-2 text-uppercase" placeholder="Placa / Código a retirar" required>
+                  <button type="submit" class="btn btn-danger btn-sm w-100 fw-bold">Registrar Salida</button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cuadrícula 160 Espacios -->
+          <div class="col-lg-8">
+            <div class="card card-custom h-100">
+              <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+                <span class="fw-bold"><i class="bi bi-grid-3x3-gap-fill text-primary"></i> Mapa de Espacios</span>
+                <div class="btn-group btn-group-sm">
+                  <button class="btn btn-outline-primary" onclick="filtrar('TODOS')">Todos</button>
+                  <button class="btn btn-outline-primary" onclick="filtrar('MOTO')">Motos</button>
+                  <button class="btn btn-outline-primary" onclick="filtrar('BICICLETA')">Bicis</button>
+                </div>
+              </div>
+              <div class="card-body panel-espacios">
+                <div id="contenedorEspacios" class="row row-cols-3 row-cols-md-4 row-cols-lg-6 g-2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 2: REPORTES -->
+      <div id="tabReportes" class="d-none">
+        <div class="card card-custom">
+          <div class="card-header card-header-cesmag d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-search me-2"></i>Consultas y Reportes</span>
+          </div>
+          <div class="card-body">
+            <div class="d-flex flex-wrap gap-2 mb-4">
+              <button class="btn btn-success" onclick="cargarReportes('activos')">Vehículos Adentro</button>
+              <button class="btn btn-secondary" onclick="cargarReportes('historial')">Historial Completo</button>
+              <div class="input-group w-auto ms-auto flex-grow-1" style="max-width: 400px;">
+                <input type="text" id="txtBuscar" class="form-control" placeholder="Buscar placa o doc...">
+                <button class="btn btn-primary" onclick="buscar()"><i class="bi bi-search"></i> Buscar</button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-bordered table-hover align-middle text-center">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Placa / Cód</th>
+                    <th>Tipo</th>
+                    <th>Propietario</th>
+                    <th>Espacio</th>
+                    <th>Hora Ingreso</th>
+                    <th>Hora Salida</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaReportes">
+                  <tr><td colspan="7">Seleccione un reporte</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // --- LÓGICA LOGIN ---
+    if(localStorage.getItem('sesion_cesmag')) {
+      document.getElementById('loginScreen').classList.add('d-none');
+      document.getElementById('mainApp').classList.remove('d-none');
+      cargarEspacios();
+    }
+
+    document.getElementById('formLogin').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ identificacion: document.getElementById('loginUser').value, password: document.getElementById('loginPass').value })
+        });
+        
+        if (!res.ok) {
+          if (res.status === 404) throw new Error("Servidor no actualizado. Reinicia node app.js en la terminal.");
+          const errData = await res.json();
+          throw new Error(errData.error || 'Credenciales inválidas');
+        }
+
+        const data = await res.json();
+        localStorage.setItem('sesion_cesmag', data.nombre);
+        document.getElementById('loginScreen').classList.add('d-none');
+        document.getElementById('mainApp').classList.remove('d-none');
+        cargarEspacios();
+        
+      } catch (err) {
+        alert("⚠️ No se pudo iniciar sesión:\n" + err.message);
+      }
+    });
+
+    function cerrarSesion() {
+      localStorage.removeItem('sesion_cesmag');
+      window.location.reload();
+    }
+
+    // --- NAVEGACIÓN Y DASHBOARD ---
+    function mostrarPestana(tab) {
+      document.getElementById('tabDashboard').classList.add('d-none');
+      document.getElementById('tabReportes').classList.add('d-none');
+      if(tab === 'dashboard') { document.getElementById('tabDashboard').classList.remove('d-none'); cargarEspacios(); }
+      if(tab === 'reportes') document.getElementById('tabReportes').classList.remove('d-none');
+    }
+
+    let listaEspacios = [];
+    async function cargarEspacios() {
+      try {
+        const res = await fetch('/api/espacios');
+        listaEspacios = await res.json();
+        actualizarEstadisticas();
+        renderizarEspacios(listaEspacios);
+      } catch(e) { console.log('Esperando conexión...'); }
+    }
+
+    function actualizarEstadisticas() {
+      document.getElementById('statTotal').innerText = listaEspacios.length;
+      document.getElementById('statMotos').innerText = listaEspacios.filter(e => e.tipo_vehiculo === 'MOTO' && e.estado === 'LIBRE').length;
+      document.getElementById('statBicis').innerText = listaEspacios.filter(e => e.tipo_vehiculo === 'BICICLETA' && e.estado === 'LIBRE').length;
+      document.getElementById('statOcupados').innerText = listaEspacios.filter(e => e.estado === 'OCUPADO').length;
+    }
+
+    function renderizarEspacios(espacios) {
+      document.getElementById('contenedorEspacios').innerHTML = espacios.map(esp => `
+        <div class="col">
+          <div class="espacio-box ${esp.estado === 'LIBRE' ? 'espacio-libre' : 'espacio-ocupado'}">
+            <i class="bi ${esp.tipo_vehiculo === 'MOTO' ? 'bi-scooter' : 'bi-bicycle'}"></i><br>${esp.numero_espacio}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filtrar(tipo) { renderizarEspacios(tipo === 'TODOS' ? listaEspacios : listaEspacios.filter(e => e.tipo_vehiculo === tipo)); }
+
+    // --- FORMULARIOS ---
+    document.getElementById('formIngreso').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const body = {
+        identificacion: document.getElementById('identificacion').value, nombre_completo: document.getElementById('nombre').value,
+        tipo_vehiculo: document.getElementById('tipo_vehiculo').value, placa_o_codigo: document.getElementById('placa').value,
+        marca: document.getElementById('marca').value, color: document.getElementById('color').value
+      };
+      const res = await fetch('/api/ingreso', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+      const data = await res.json(); alert(res.ok ? data.mensaje : data.error);
+      if(res.ok) { document.getElementById('formIngreso').reset(); cargarEspacios(); }
+    });
+
+    document.getElementById('formSalida').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const res = await fetch('/api/salida', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ placa_o_codigo: document.getElementById('placaSalida').value }) });
+      const data = await res.json(); alert(res.ok ? data.mensaje : data.error);
+      if(res.ok) { document.getElementById('formSalida').reset(); cargarEspacios(); }
+    });
+
+    // --- REPORTES ---
+    async function cargarReportes(filtro) {
+      const res = await fetch(`/api/reportes/movimientos?filtro=${filtro}`);
+      dibujarTabla(await res.json());
+    }
+
+    async function buscar() {
+      const q = document.getElementById('txtBuscar').value;
+      if(!q) return alert('Escribe algo para buscar');
+      const res = await fetch(`/api/reportes/buscar?q=${q}`);
+      const data = await res.json();
+      
+      document.getElementById('tablaReportes').innerHTML = data.map(item => `
+        <tr>
+          <td class="fw-bold">${item.placa_o_codigo}</td>
+          <td>${item.tipo_vehiculo}</td>
+          <td>${item.nombre_completo}<br><small class="text-muted">${item.identificacion}</small></td>
+          <td>-</td><td>-</td><td>-</td>
+          <td><span class="badge bg-secondary">Resultado Búsqueda</span></td>
+        </tr>
+      `).join('') || `<tr><td colspan="7">No se encontraron resultados</td></tr>`;
+    }
+
+    function dibujarTabla(datos) {
+      document.getElementById('tablaReportes').innerHTML = datos.map(item => `
+        <tr>
+          <td class="fw-bold">${item.placa_o_codigo}</td>
+          <td>${item.tipo_vehiculo}</td>
+          <td>${item.nombre_completo}</td>
+          <td class="fw-bold text-primary">${item.numero_espacio}</td>
+          <td>${item.ingreso}</td>
+          <td>${item.salida || '---'}</td>
+          <td><span class="badge ${item.estado === 'ACTIVO' ? 'bg-success' : 'bg-secondary'}">${item.estado}</span></td>
+        </tr>
+      `).join('') || `<tr><td colspan="7">No hay registros</td></tr>`;
+    }
+  </script>
+</body>
+</html>
